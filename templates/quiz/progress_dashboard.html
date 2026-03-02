@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}My Progress - QuizNjoy{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-6">
+        <a href="{% url 'accounts:profile' %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Back to Profile
+        </a>
+    </div>
+    <div class="bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 text-white rounded-2xl shadow-2xl p-8 md:p-10 mb-8 border border-white/10">
+        <h1 class="text-2xl md:text-4xl font-extrabold mb-2 tracking-tight">My Progress</h1>
+        <p class="text-white/80">Track your quiz performance and improve.</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Total Attempts</p>
+            <p class="text-3xl font-extrabold text-slate-800">{{ total_attempts }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Correct Answers</p>
+            <p class="text-3xl font-extrabold text-emerald-600">{{ total_correct }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Questions Attempted</p>
+            <p class="text-3xl font-extrabold text-slate-800">{{ total_questions_attempted }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Overall Accuracy</p>
+            <p class="text-3xl font-extrabold text-indigo-600">{{ overall_pct }}%</p>
+        </div>
+    </div>
+    {% if by_subject %}
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6 md:p-8 mb-8">
+        <h2 class="text-xl font-bold text-slate-800 mb-5">By Subject</h2>
+        <div class="space-y-3">
+            {% for item in by_subject %}
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <span class="font-semibold text-slate-800">{{ item.subject.name }}</span>
+                <span class="text-sm text-slate-600">{{ item.attempts }} attempt(s) · {% widthratio item.correct item.total 100 %}% ({{ item.correct }}/{{ item.total }})</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6 md:p-8">
+        <h2 class="text-xl font-bold text-slate-800 mb-5">Recent Attempts</h2>
+        {% if attempts %}
+        <ul class="divide-y divide-gray-200">
+            {% for a in attempts %}
+            <li class="py-3 flex justify-between items-center">
+                <span>{{ a.subject.name }} · Unit {{ a.unit }}</span>
+                <span class="font-semibold">{{ a.score }}/{{ a.total_questions }} ({% widthratio a.score a.total_questions 100 %}%) · {{ a.attempted_at|date:"M d, H:i" }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-gray-500">No attempts yet. <a href="{% url 'quiz:select_semester' %}" class="text-blue-600 hover:underline">Take a quiz</a>.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

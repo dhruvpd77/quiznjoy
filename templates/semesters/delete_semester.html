@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Semester - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'semesters:manage_semesters' %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Semesters
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-xl p-8 border-t-4 border-red-600">
+        <h1 class="text-3xl font-bold text-red-600 mb-2">Delete Semester</h1>
+        <p class="text-gray-600 mb-8">Are you sure you want to delete this semester?</p>
+        
+        <div class="bg-gray-50 rounded-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">{{ semester.name }}</h3>
+            {% if semester.description %}
+                <p class="text-gray-600 mb-4">{{ semester.description }}</p>
+            {% endif %}
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="bg-blue-100 p-4 rounded-lg text-center">
+                    <div class="text-3xl font-bold text-blue-600">{{ subjects_count }}</div>
+                    <div class="text-sm text-blue-800">Subject(s)</div>
+                </div>
+                <div class="bg-purple-100 p-4 rounded-lg text-center">
+                    <div class="text-3xl font-bold text-purple-600">{{ questions_count }}</div>
+                    <div class="text-sm text-purple-800">Question(s)</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6">
+            <div class="flex">
+                <svg class="h-5 w-5 text-red-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <h3 class="text-sm font-medium text-red-800">Warning!</h3>
+                    <p class="text-sm text-red-700 mt-1">Deleting this semester will also delete all {{ subjects_count }} subject(s) and {{ questions_count }} question(s). This action cannot be undone.</p>
+                </div>
+            </div>
+        </div>
+        
+        <form method="post" class="flex space-x-4">
+            {% csrf_token %}
+            <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition duration-300 shadow-lg">
+                Yes, Delete Semester
+            </button>
+            <a href="{% url 'semesters:manage_semesters' %}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-lg text-center transition duration-300">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

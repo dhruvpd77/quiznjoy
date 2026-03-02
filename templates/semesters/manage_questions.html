@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Questions - {{ subject.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="mb-8 flex items-center justify-between">
+        <a href="{% url 'semesters:admin_dashboard' %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Dashboard
+        </a>
+        <div class="flex gap-3">
+            <a href="{% url 'semesters:manage_programming_questions' subject.id %}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition duration-300 font-semibold">
+                💻 Manage Programming Questions
+            </a>
+            <a href="{% url 'semesters:manage_units' subject.id %}" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition duration-300 font-semibold">
+                📚 Manage Units
+            </a>
+            <a href="{% url 'semesters:add_question' subject.id %}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition duration-300 font-semibold">
+                + Add New Question
+            </a>
+            <a href="{% url 'semesters:export_questions' subject.id %}" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg transition duration-300 font-semibold">
+                📤 Export to Excel
+            </a>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-xl p-8 mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ subject.name }}</h1>
+        <p class="text-gray-600 mb-6">{{ subject.semester.name }} - Total: {{ questions.count }} questions</p>
+        
+        <!-- Unit Filter -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-gray-700">Filter by Unit:</label>
+                {% if questions.count > 0 %}
+                    {% if selected_unit %}
+                        <a href="{% url 'semesters:delete_unit_questions' subject.id selected_unit %}" 
+                           class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-lg text-sm font-semibold transition duration-300">
+                            🗑️ Delete All Unit {{ selected_unit }} Questions
+                        </a>
+                    {% else %}
+                        <a href="{% url 'semesters:delete_all_questions' subject.id %}" 
+                           class="bg-red-700 hover:bg-red-800 text-white px-4 py-1 rounded-lg text-sm font-semibold transition duration-300">
+                            🗑️ Delete ALL Questions
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{% url 'semesters:manage_questions' subject.id %}" 
+                   class="px-4 py-2 rounded-lg font-semibold transition duration-300 {% if not selected_unit %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                    All Units
+                </a>
+                {% for unit in available_units %}
+                    <a href="{% url 'semesters:manage_questions' subject.id %}?unit={{ unit }}" 
+                       class="px-4 py-2 rounded-lg font-semibold transition duration-300 {% if selected_unit == unit|stringformat:'s' %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                        Unit {{ unit }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    {% if questions %}
+        <div class="space-y-4">
+            {% for question in questions %}
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-purple-600">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold mr-3">
+                                    Unit {{ question.unit }}
+                                </span>
+                                {% if question.question_image %}
+                                <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-medium" title="This MCQ has an image (shown with question in quiz)">🖼️ Image</span>
+                                {% endif %}
+                                <span class="text-sm text-gray-500 ml-2">ID: {{ question.id }}</span>
+                            </div>
+                            <div class="text-lg text-gray-800 dark:text-slate-200 mb-4">
+                                <div class="math-render font-sans">{{ question.question_text }}</div>
+                            </div>
+                            {% if question.question_image %}
+                            <div class="mb-4">
+                                <img src="{{ question.question_image.url }}" alt="Question" class="max-w-xs rounded-lg border border-gray-300 dark:border-slate-600 shadow-sm">
+                            </div>
+                            {% endif %}
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                                <div class="p-3 border-2 rounded-lg {% if question.correct_answer == 'A' %}border-green-500 bg-green-50 dark:bg-emerald-950/40{% else %}border-gray-200 dark:border-slate-600{% endif %}">
+                                    <span class="font-bold text-purple-600">A.</span>
+                                    <span class="math-render font-sans ml-2">{{ question.option_a }}</span>
+                                    {% if question.correct_answer == 'A' %}<span class="ml-2 text-green-600 dark:text-emerald-400 font-bold">✓ Correct</span>{% endif %}
+                                </div>
+                                <div class="p-3 border-2 rounded-lg {% if question.correct_answer == 'B' %}border-green-500 bg-green-50 dark:bg-emerald-950/40{% else %}border-gray-200 dark:border-slate-600{% endif %}">
+                                    <span class="font-bold text-purple-600">B.</span>
+                                    <span class="math-render font-sans ml-2">{{ question.option_b }}</span>
+                                    {% if question.correct_answer == 'B' %}<span class="ml-2 text-green-600 dark:text-emerald-400 font-bold">✓ Correct</span>{% endif %}
+                                </div>
+                                <div class="p-3 border-2 rounded-lg {% if question.correct_answer == 'C' %}border-green-500 bg-green-50 dark:bg-emerald-950/40{% else %}border-gray-200 dark:border-slate-600{% endif %}">
+                                    <span class="font-bold text-purple-600">C.</span>
+                                    <span class="math-render font-sans ml-2">{{ question.option_c }}</span>
+                                    {% if question.correct_answer == 'C' %}<span class="ml-2 text-green-600 dark:text-emerald-400 font-bold">✓ Correct</span>{% endif %}
+                                </div>
+                                <div class="p-3 border-2 rounded-lg {% if question.correct_answer == 'D' %}border-green-500 bg-green-50 dark:bg-emerald-950/40{% else %}border-gray-200 dark:border-slate-600{% endif %}">
+                                    <span class="font-bold text-purple-600">D.</span>
+                                    <span class="math-render font-sans ml-2">{{ question.option_d }}</span>
+                                    {% if question.correct_answer == 'D' %}<span class="ml-2 text-green-600 dark:text-emerald-400 font-bold">✓ Correct</span>{% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if question.added_by or question.verified_by %}
+                                <div class="text-sm text-gray-500">
+                                    {% if question.added_by %}<span>Added by: {{ question.added_by }}</span>{% endif %}
+                                    {% if question.verified_by %}<span class="ml-4">Verified by: {{ question.verified_by }}</span>{% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="ml-4 flex flex-col gap-2">
+                            <a href="{% url 'semesters:edit_question' question.id %}" 
+                               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-300 text-center">
+                                Edit
+                            </a>
+                            <a href="{% url 'semesters:delete_question' question.id %}" 
+                               class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-300 text-center">
+                                Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-lg shadow-xl p-12 text-center">
+            <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="mt-4 text-lg font-medium text-gray-900">No questions found</h3>
+            {% if selected_unit %}
+                <p class="mt-2 text-sm text-gray-500">No questions in Unit {{ selected_unit }}. Try viewing all units or add new questions.</p>
+            {% else %}
+                <p class="mt-2 text-sm text-gray-500">No questions have been added to this subject yet.</p>
+            {% endif %}
+            <div class="mt-6">
+                <a href="{% url 'semesters:add_question' subject.id %}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700">
+                    Add First Question
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

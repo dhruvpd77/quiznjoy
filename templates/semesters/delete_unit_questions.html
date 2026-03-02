@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Unit {{ unit }} Questions - {{ subject.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'semesters:manage_questions' subject.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Questions
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-xl p-8 border-t-4 border-red-600">
+        <h1 class="text-3xl font-bold text-red-600 mb-2">Delete All Questions from Unit {{ unit }}</h1>
+        <p class="text-gray-600 mb-8">Are you sure you want to delete all questions from Unit {{ unit }}?</p>
+        
+        <div class="bg-red-50 border-l-4 border-red-600 p-6 mb-8">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-red-600 mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <h3 class="text-lg font-bold text-red-800 mb-2">⚠️ CRITICAL WARNING!</h3>
+                    <ul class="text-sm text-red-700 space-y-1">
+                        <li>• <strong>{{ question_count }} questions</strong> will be permanently deleted from <strong>Unit {{ unit }}</strong></li>
+                        <li>• Subject: <strong>{{ subject.name }}</strong> ({{ subject.semester.name }})</li>
+                        <li>• This action <strong>CANNOT BE UNDONE</strong></li>
+                        <li>• Students who took quizzes with these questions will still see their history</li>
+                        <li>• New quizzes will not include these deleted questions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 rounded-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Questions to be deleted (showing first 5):</h3>
+            <div class="space-y-4">
+                {% for question in questions %}
+                    <div class="border-l-4 border-red-500 pl-4 py-2">
+                        <div class="text-sm text-gray-600 mb-1">ID: {{ question.id }}</div>
+                        <div class="text-gray-800">
+                            <pre class="whitespace-pre-wrap font-sans">{{ question.question_text|truncatechars:150 }}</pre>
+                        </div>
+                        <div class="text-sm text-gray-500 mt-1">Correct Answer: {{ question.correct_answer }}</div>
+                    </div>
+                {% endfor %}
+                {% if question_count > 5 %}
+                    <div class="text-center text-gray-600 font-semibold py-2">
+                        ... and {{ question_count|add:"-5" }} more question(s)
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+            <p class="text-yellow-800 font-semibold">💡 Tip: If you only want to delete specific questions, go back and use individual delete buttons instead.</p>
+        </div>
+        
+        <form method="post" class="flex space-x-4">
+            {% csrf_token %}
+            <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg transition duration-300 shadow-lg text-lg">
+                ⚠️ Yes, Delete All {{ question_count }} Questions from Unit {{ unit }}
+            </button>
+            <a href="{% url 'semesters:manage_questions' subject.id %}?unit={{ unit }}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-4 rounded-lg text-center transition duration-300 text-lg">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

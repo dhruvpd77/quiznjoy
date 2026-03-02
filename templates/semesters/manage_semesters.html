@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Semesters - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'semesters:admin_dashboard' %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-xl p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">Manage Semesters</h1>
+        
+        {% if semesters %}
+            <div class="space-y-4">
+                {% for semester in semesters %}
+                    <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-600 transition duration-300">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-gray-800">{{ semester.name }}</h3>
+                                {% if semester.description %}
+                                    <p class="text-sm text-gray-500 mt-1">{{ semester.description }}</p>
+                                {% endif %}
+                                <p class="text-gray-600 mt-2">{{ semester.subjects.count }} subject(s)</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="{% url 'semesters:edit_semester' semester.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-300">
+                                    Edit
+                                </a>
+                                <a href="{% url 'semesters:manage_subjects' semester.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-300">
+                                    Subjects
+                                </a>
+                                <a href="{% url 'semesters:delete_semester' semester.id %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-300">
+                                    Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-600 text-center py-8">No semesters created yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

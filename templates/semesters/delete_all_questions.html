@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete ALL Questions - {{ subject.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'semesters:manage_questions' subject.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Questions
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-xl p-8 border-t-4 border-red-700">
+        <h1 class="text-4xl font-bold text-red-700 mb-2">🚨 Delete ALL Questions</h1>
+        <p class="text-gray-600 mb-8">Are you sure you want to delete <strong>EVERY QUESTION</strong> from this subject?</p>
+        
+        <div class="bg-red-100 border-2 border-red-700 p-6 mb-8">
+            <div class="flex items-start">
+                <svg class="h-8 w-8 text-red-700 mr-4 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <h3 class="text-xl font-bold text-red-900 mb-3">🔥 EXTREME WARNING! 🔥</h3>
+                    <ul class="text-red-900 font-semibold space-y-2">
+                        <li>• <strong class="text-2xl">{{ question_count }} TOTAL QUESTIONS</strong> will be PERMANENTLY DELETED</li>
+                        <li>• Subject: <strong>{{ subject.name }}</strong> ({{ subject.semester.name }})</li>
+                        <li>• <strong>ALL UNITS WILL BE EMPTIED</strong></li>
+                        <li>• This action is <strong>IRREVERSIBLE</strong> - NO UNDO!</li>
+                        <li>• Students cannot take quizzes without questions</li>
+                        <li>• You will need to upload/add questions again</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 rounded-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Unit Distribution (all will be deleted):</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {% for unit, count in unit_distribution.items %}
+                    <div class="bg-white border-2 border-red-300 rounded-lg p-4 text-center">
+                        <div class="text-lg font-bold text-red-600">Unit {{ unit }}</div>
+                        <div class="text-3xl font-bold text-gray-800">{{ count }}</div>
+                        <div class="text-sm text-gray-600">questions</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="mt-4 text-center">
+                <div class="inline-block bg-red-600 text-white px-6 py-3 rounded-lg">
+                    <div class="text-sm">TOTAL</div>
+                    <div class="text-3xl font-bold">{{ question_count }}</div>
+                    <div class="text-sm">questions to delete</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-yellow-50 border-2 border-yellow-500 p-6 mb-6">
+            <h4 class="font-bold text-yellow-900 mb-2">⚠️ Before you proceed, consider:</h4>
+            <ul class="text-yellow-800 space-y-1 ml-6 list-disc">
+                <li>Do you really want to delete EVERYTHING?</li>
+                <li>Would deleting specific units be better?</li>
+                <li>Do you have a backup of these questions?</li>
+                <li>Can you re-upload the Excel file if needed?</li>
+            </ul>
+        </div>
+        
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+            <p class="text-blue-800"><strong>💡 Alternative:</strong> If you only want to delete questions from specific units, go back and use the unit filter to delete unit-wise.</p>
+        </div>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            
+            <div class="bg-white border-2 border-red-500 rounded-lg p-6">
+                <label class="flex items-center text-red-900 font-semibold cursor-pointer">
+                    <input type="checkbox" required class="w-5 h-5 mr-3" id="confirm_delete">
+                    <span>I understand this will permanently delete ALL {{ question_count }} questions and this action CANNOT be undone.</span>
+                </label>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button type="submit" class="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-lg transition duration-300 shadow-lg text-lg">
+                    🔥 YES, DELETE ALL {{ question_count }} QUESTIONS PERMANENTLY
+                </button>
+                <a href="{% url 'semesters:manage_questions' subject.id %}" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg text-center transition duration-300 text-lg">
+                    ✅ No, Keep Questions (Cancel)
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

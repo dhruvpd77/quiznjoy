@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Question - {{ question.subject.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'semesters:manage_questions' question.subject.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Questions
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-xl p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Edit Question</h1>
+        <p class="text-gray-600 mb-8">{{ question.subject.name }} - Unit {{ question.unit }}</p>
+        
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label for="unit" class="block text-sm font-medium text-gray-700 mb-2">
+                    Unit Number <span class="text-red-600">*</span>
+                </label>
+                <select name="unit" id="unit" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    {% for i in "12345678910" %}
+                        <option value="{{ forloop.counter }}" {% if question.unit == forloop.counter %}selected{% endif %}>Unit {{ forloop.counter }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label for="question_text" class="block text-sm font-medium text-gray-700 mb-2">
+                    Question Text <span class="text-red-600">*</span>
+                </label>
+                <textarea name="question_text" id="question_text" rows="5" required
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">{{ question.question_text }}</textarea>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Question Image (Optional) 🖼️
+                </label>
+                {% if question.question_image %}
+                    <div class="mb-3 p-4 bg-gray-50 rounded-lg border border-gray-300">
+                        <p class="text-sm text-gray-700 mb-2 font-semibold">Current Image (shown with this MCQ when students take the quiz):</p>
+                        <img src="{{ question.question_image.url }}" alt="Current Question Image" class="max-w-md h-auto rounded-lg border-2 border-gray-300 mb-3">
+                        <label class="flex items-center text-sm text-red-600">
+                            <input type="checkbox" name="remove_image" class="mr-2">
+                            Remove this image
+                        </label>
+                    </div>
+                {% endif %}
+                <input type="file" name="question_image" id="question_image" accept="image/*"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <p class="mt-1 text-sm text-gray-500">Optional. If set, the image is displayed with this question when students take the quiz. Upload diagrams, equations, circuits, or screenshots.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="option_a" class="block text-sm font-medium text-gray-700 mb-2">
+                        Option A <span class="text-red-600">*</span>
+                    </label>
+                    <textarea name="option_a" id="option_a" rows="3" required
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">{{ question.option_a }}</textarea>
+                </div>
+                
+                <div>
+                    <label for="option_b" class="block text-sm font-medium text-gray-700 mb-2">
+                        Option B <span class="text-red-600">*</span>
+                    </label>
+                    <textarea name="option_b" id="option_b" rows="3" required
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">{{ question.option_b }}</textarea>
+                </div>
+                
+                <div>
+                    <label for="option_c" class="block text-sm font-medium text-gray-700 mb-2">
+                        Option C <span class="text-red-600">*</span>
+                    </label>
+                    <textarea name="option_c" id="option_c" rows="3" required
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">{{ question.option_c }}</textarea>
+                </div>
+                
+                <div>
+                    <label for="option_d" class="block text-sm font-medium text-gray-700 mb-2">
+                        Option D <span class="text-red-600">*</span>
+                    </label>
+                    <textarea name="option_d" id="option_d" rows="3" required
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">{{ question.option_d }}</textarea>
+                </div>
+            </div>
+            
+            <div>
+                <label for="correct_answer" class="block text-sm font-medium text-gray-700 mb-2">
+                    Correct Answer <span class="text-red-600">*</span>
+                </label>
+                <select name="correct_answer" id="correct_answer" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="A" {% if question.correct_answer == 'A' %}selected{% endif %}>A</option>
+                    <option value="B" {% if question.correct_answer == 'B' %}selected{% endif %}>B</option>
+                    <option value="C" {% if question.correct_answer == 'C' %}selected{% endif %}>C</option>
+                    <option value="D" {% if question.correct_answer == 'D' %}selected{% endif %}>D</option>
+                </select>
+            </div>
+            <div>
+                <label for="explanation" class="block text-sm font-medium text-gray-700 mb-2">Explanation (Optional)</label>
+                <textarea name="explanation" id="explanation" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">{{ question.explanation }}</textarea>
+            </div>
+            <div>
+                <label for="hint" class="block text-sm font-medium text-gray-700 mb-2">Hint (Optional)</label>
+                <input type="text" name="hint" id="hint" value="{{ question.hint }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="difficulty" class="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
+                    <select name="difficulty" id="difficulty" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="easy" {% if question.difficulty == 'easy' %}selected{% endif %}>Easy</option>
+                        <option value="medium" {% if question.difficulty == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="hard" {% if question.difficulty == 'hard' %}selected{% endif %}>Hard</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select name="status" id="status" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="draft" {% if question.status == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="published" {% if question.status == 'published' %}selected{% endif %}>Published</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">Tags (Optional)</label>
+                <input type="text" name="tags" id="tags" value="{{ question.tags }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g. pandas, numpy">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="added_by" class="block text-sm font-medium text-gray-700 mb-2">
+                        Added By (Optional)
+                    </label>
+                    <input type="text" name="added_by" id="added_by" value="{{ question.added_by }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label for="verified_by" class="block text-sm font-medium text-gray-700 mb-2">
+                        Verified By (Optional)
+                    </label>
+                    <input type="text" name="verified_by" id="verified_by" value="{{ question.verified_by }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-semibold py-3 rounded-lg transition duration-300 transform hover:scale-105 shadow-lg">
+                    Update Question
+                </button>
+                <a href="{% url 'semesters:manage_questions' question.subject.id %}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-lg text-center transition duration-300">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

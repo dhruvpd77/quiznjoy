@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>{% block title %}QuizNjoy - Online Quiz Platform{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+    <style>
+        :root {
+            --color-primary: 99 102 241;
+            --color-primary-dark: 79 70 229;
+            --color-accent: 16 185 129;
+            --color-surface: 248 250 252;
+            --color-card: 255 255 255;
+            --shadow-soft: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-card: 0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+            --shadow-card-hover: 0 25px 50px -12px rgb(0 0 0 / 0.15);
+            --radius-xl: 1rem;
+            --radius-2xl: 1.5rem;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        pre, code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+        pre {
+            tab-size: 4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+        }
+        .nav-glass {
+            background: linear-gradient(135deg, rgb(67 56 202) 0%, rgb(99 102 241) 50%, rgb(79 70 229) 100%);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+        }
+        .btn-nav {
+            transition: all 0.2s ease;
+        }
+        .btn-nav:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-1px);
+        }
+        .card-lift {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .card-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-card-hover);
+        }
+        @media (max-width: 768px) {
+            a, button { min-height: 44px; min-width: 44px; }
+            input, textarea, select { font-size: 16px; }
+            button {
+                -webkit-tap-highlight-color: transparent;
+                user-select: none;
+            }
+            body { -webkit-overflow-scrolling: touch; }
+        }
+        .touch-manipulation { touch-action: manipulation; }
+        html { scroll-behavior: smooth; }
+        .message-toast {
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Dark mode: invert main content cards and text */
+        .dark body { background: linear-gradient(165deg, #0f172a 0%, #1e293b 50%, #334155 100%); }
+        .dark main { background: transparent; }
+        .dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+        .dark .text-slate-800, .dark .text-gray-800, .dark .text-gray-900 { color: #e2e8f0 !important; }
+        .dark .text-slate-600, .dark .text-gray-600 { color: #94a3b8 !important; }
+        .dark .text-slate-500, .dark .text-gray-500 { color: #64748b !important; }
+        .dark .border-slate-200 { border-color: #334155 !important; }
+        .dark .bg-slate-50 { background-color: #1e293b !important; }
+        .dark .bg-indigo-50 { background-color: #312e81 !important; }
+        .dark .bg-emerald-50 { background-color: #064e3b !important; }
+        .dark .bg-amber-50 { background-color: #451a03 !important; }
+        .dark .bg-red-50 { background-color: #450a0a !important; }
+        .math-render { white-space: pre-wrap; word-wrap: break-word; }
+        .katex { font-size: 1.1em; }
+    </style>
+</head>
+<body class="dark:bg-slate-900 dark:text-slate-200">
+    {% load static %}
+    <!-- Navigation Bar -->
+    <nav class="nav-glass text-white sticky top-0 z-50 backdrop-blur-md">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-3 md:py-4">
+                <a href="{% url 'home' %}" class="flex items-center gap-2 md:gap-3 group">
+                    <img src="{% static 'images/logo.png' %}" alt="QuizNJoy Logo" class="h-10 w-10 md:h-12 md:w-12 rounded-xl group-hover:scale-105 transition-transform duration-300 shadow-lg">
+                    <span class="text-xl md:text-2xl font-extrabold tracking-tight">
+                        <span class="text-amber-300">Quiz</span><span class="text-emerald-300">Njoy</span>
+                    </span>
+                </a>
+                
+                <div class="hidden md:flex items-center gap-2">
+                    <button type="button" id="dark-mode-toggle" class="p-2.5 rounded-xl hover:bg-white/15 transition focus:outline-none focus:ring-2 focus:ring-white/50" aria-label="Toggle dark mode">
+                        <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <svg id="icon-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    </button>
+                    <a href="{% url 'quiz:about_us' %}" class="btn-nav px-4 py-2.5 rounded-xl font-medium">About</a>
+                    {% if user.is_authenticated %}
+                        <span class="px-3 py-2 text-sm text-white/80">Hi, <span class="font-semibold text-white">{{ user.username }}</span></span>
+                        <a href="{% url 'accounts:profile' %}" class="btn-nav px-4 py-2.5 rounded-xl font-medium">Profile</a>
+                        {% if user.is_staff %}
+                            <a href="{% url 'semesters:admin_dashboard' %}" class="bg-amber-400 hover:bg-amber-500 text-gray-900 px-4 py-2.5 rounded-xl font-semibold transition shadow-lg">Admin</a>
+                        {% endif %}
+                        <a href="{% url 'accounts:logout' %}" class="bg-white/20 hover:bg-red-500/90 px-4 py-2.5 rounded-xl font-medium transition">Logout</a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn-nav px-4 py-2.5 rounded-xl font-medium">Login</a>
+                        <a href="{% url 'accounts:signup' %}" class="bg-emerald-400 hover:bg-emerald-500 text-gray-900 px-4 py-2.5 rounded-xl font-semibold transition shadow-lg">Sign Up</a>
+                    {% endif %}
+                </div>
+                
+                <div class="flex md:hidden items-center gap-1">
+                    <button type="button" id="dark-mode-toggle-mobile" class="p-3 rounded-xl hover:bg-white/10 transition" aria-label="Toggle dark mode">
+                        <svg id="icon-sun-mobile" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <svg id="icon-moon-mobile" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    </button>
+                    <button id="mobile-menu-button" class="p-3 rounded-xl hover:bg-white/10 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="mobile-menu" class="hidden md:hidden pb-4">
+                <div class="flex flex-col gap-1 pt-4 border-t border-white/20">
+                    <button type="button" id="dark-mode-toggle-mobile-menu" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 font-medium text-left w-full">
+                        <span id="mobile-theme-icon">🌙</span> <span>Dark mode</span>
+                    </button>
+                    <a href="{% url 'quiz:about_us' %}" class="px-4 py-3 rounded-xl hover:bg-white/10 font-medium">About</a>
+                    {% if user.is_authenticated %}
+                        <div class="px-4 py-2 text-sm text-white/70">Hi, <span class="font-semibold text-white">{{ user.username }}</span></div>
+                        <a href="{% url 'accounts:profile' %}" class="px-4 py-3 rounded-xl hover:bg-white/10 font-medium">Profile</a>
+                        {% if user.is_staff %}
+                            <a href="{% url 'semesters:admin_dashboard' %}" class="px-4 py-3 rounded-xl bg-amber-400 text-gray-900 font-semibold">Admin</a>
+                        {% endif %}
+                        <a href="{% url 'accounts:logout' %}" class="px-4 py-3 rounded-xl hover:bg-red-500/80 font-medium">Logout</a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="px-4 py-3 rounded-xl hover:bg-white/10 font-medium">Login</a>
+                        <a href="{% url 'accounts:signup' %}" class="px-4 py-3 rounded-xl bg-emerald-400 text-gray-900 font-semibold">Sign Up</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <script>
+        // Dark mode: apply saved preference and toggle
+        (function() {
+            var KEY = 'quiznjoy-theme';
+            var root = document.documentElement;
+            function isDark() { return root.classList.contains('dark'); }
+            function setDark(dark) {
+                root.classList.toggle('dark', dark);
+                try { localStorage.setItem(KEY, dark ? 'dark' : 'light'); } catch (e) {}
+                var sun = document.getElementById('icon-sun');
+                var moon = document.getElementById('icon-moon');
+                var sunM = document.getElementById('icon-sun-mobile');
+                var moonM = document.getElementById('icon-moon-mobile');
+                var mobileLabel = document.getElementById('mobile-theme-icon');
+                if (sun) { sun.classList.toggle('hidden', !dark); }
+                if (moon) { moon.classList.toggle('hidden', dark); }
+                if (sunM) { sunM.classList.toggle('hidden', !dark); }
+                if (moonM) { moonM.classList.toggle('hidden', dark); }
+                if (mobileLabel) { mobileLabel.textContent = dark ? '☀️' : '🌙'; }
+            }
+            try {
+                var saved = localStorage.getItem(KEY);
+                if (saved === 'dark' || (saved !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches))
+                    setDark(true);
+                else
+                    setDark(false);
+            } catch (e) { setDark(false); }
+            function toggleDark() { setDark(!isDark()); }
+            var btn = document.getElementById('dark-mode-toggle');
+            var btnM = document.getElementById('dark-mode-toggle-mobile');
+            var btnMenu = document.getElementById('dark-mode-toggle-mobile-menu');
+            if (btn) btn.addEventListener('click', toggleDark);
+            if (btnM) btnM.addEventListener('click', toggleDark);
+            if (btnMenu) btnMenu.addEventListener('click', toggleDark);
+        })();
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mx-auto px-4 mt-4 max-w-2xl">
+            {% for message in messages %}
+                <div class="message-toast mb-3 rounded-2xl border shadow-lg overflow-hidden {% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-800 dark:!bg-red-950/40 dark:border-red-800 dark:text-red-200{% elif message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800 dark:!bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-200{% elif message.tags == 'warning' %}bg-amber-50 border-amber-200 text-amber-800 dark:!bg-amber-950/40 dark:border-amber-800 dark:text-amber-200{% else %}bg-indigo-50 border-indigo-200 text-indigo-800 dark:!bg-indigo-950/40 dark:border-indigo-800 dark:text-indigo-200{% endif %}" role="alert">
+                    <div class="p-4 flex items-start gap-3">
+                        <span class="text-2xl flex-shrink-0">{% if message.tags == 'error' %}⚠️{% elif message.tags == 'success' %}✓{% elif message.tags == 'warning' %}⚡{% else %}ℹ️{% endif %}</span>
+                        <p class="font-medium pt-0.5">{{ message }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-3 sm:px-4 py-6 md:py-10">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 md:mt-20 border-t border-slate-200/80 dark:border-slate-700 bg-slate-900 text-slate-300 dark:bg-slate-950">
+        <div class="container mx-auto px-4 py-10 md:py-14">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 mb-10">
+                <div class="text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start gap-3 mb-4">
+                        <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-14 w-14 rounded-xl">
+                        <span class="text-xl font-bold text-white"><span class="text-amber-400">Quiz</span><span class="text-emerald-400">Njoy</span></span>
+                    </div>
+                    <p class="text-slate-400 text-sm">Your online quiz companion for learning and practice.</p>
+                </div>
+                <div class="text-center">
+                    <h4 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-4">Quick Links</h4>
+                    <div class="space-y-2">
+                        <a href="{% url 'quiz:about_us' %}" class="block text-slate-400 hover:text-white transition">About</a>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'quiz:select_semester' %}" class="block text-slate-400 hover:text-white transition">Start Quiz</a>
+                            <a href="{% url 'accounts:profile' %}" class="block text-slate-400 hover:text-white transition">Profile</a>
+                            {% if user.is_staff %}
+                                <a href="{% url 'semesters:admin_dashboard' %}" class="block text-slate-400 hover:text-white transition">Admin</a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'accounts:login' %}" class="block text-slate-400 hover:text-white transition">Login</a>
+                            <a href="{% url 'accounts:signup' %}" class="block text-slate-400 hover:text-white transition">Sign Up</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-center md:text-right">
+                    <h4 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-4">Our Mission</h4>
+                    <p class="text-slate-400 text-sm">Making learning interactive, measurable, and enjoyable.</p>
+                    <p class="mt-2 text-slate-500 text-xs">✨ Quizzes · 📊 Progress · 🎯 Practice</p>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-slate-700/50 text-center">
+                <p class="text-slate-500 text-sm">Learn · Practice · Succeed</p>
+                <p class="text-slate-600 text-xs mt-1">© 2025 QuizNjoy</p>
+            </div>
+        </div>
+    </footer>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+    <script>
+        function initMathRender() {
+            if (typeof renderMathInElement !== 'undefined') {
+                document.querySelectorAll('.math-render').forEach(function(el) {
+                    renderMathInElement(el, {
+                        delimiters: [
+                            { left: '\\(', right: '\\)', display: false },
+                            { left: '\\[', right: '\\]', display: true }
+                        ],
+                        throwOnError: false
+                    });
+                });
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() { window.addEventListener('load', initMathRender); });
+        } else {
+            window.addEventListener('load', initMathRender);
+        }
+    </script>
+</body>
+</html>
+

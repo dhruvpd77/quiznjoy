@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg shadow-xl p-6 mb-6">
+        <div class="flex flex-col sm:flex-row items-center justify-between">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-bold mb-2">User Management</h1>
+                <p class="text-blue-100 text-sm sm:text-base">Track users, logins, and quiz performance</p>
+            </div>
+            <a href="{% url 'semesters:admin_dashboard' %}" class="mt-4 sm:mt-0 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition duration-300 font-semibold">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
+        <form method="get" class="flex gap-2">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Search by username or email..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold">Search</button>
+            {% if search_query %}
+            <a href="{% url 'accounts:admin_user_management' %}" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition duration-300 font-semibold">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 sm:p-6 rounded-lg shadow-lg">
+            <h3 class="text-sm sm:text-base font-semibold mb-2 opacity-90">Total Users</h3>
+            <p class="text-3xl sm:text-4xl font-bold">{{ total_users }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 sm:p-6 rounded-lg shadow-lg">
+            <h3 class="text-sm sm:text-base font-semibold mb-2 opacity-90">Active Users</h3>
+            <p class="text-3xl sm:text-4xl font-bold">{{ active_users }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 sm:p-6 rounded-lg shadow-lg">
+            <h3 class="text-sm sm:text-base font-semibold mb-2 opacity-90">Total Logins</h3>
+            <p class="text-3xl sm:text-4xl font-bold">{{ total_logins }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 sm:p-6 rounded-lg shadow-lg">
+            <h3 class="text-sm sm:text-base font-semibold mb-2 opacity-90">Quiz Attempts</h3>
+            <p class="text-3xl sm:text-4xl font-bold">{{ total_quiz_attempts }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-4 sm:p-6 rounded-lg shadow-lg">
+            <h3 class="text-sm sm:text-base font-semibold mb-2 opacity-90">Overall Avg Score</h3>
+            <p class="text-3xl sm:text-4xl font-bold">{{ overall_avg_score }}%</p>
+        </div>
+    </div>
+
+    <!-- Top Performers -->
+    {% if top_performers %}
+    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">🏆 Top Performers</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Score</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attempts</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for performer in top_performers %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">#{{ forloop.counter }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ performer.user.username }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full {% if performer.avg_score >= 70 %}bg-green-100 text-green-800{% elif performer.avg_score >= 50 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ performer.avg_score }}%
+                            </span>
+                        </td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ performer.attempts }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{% url 'accounts:admin_user_detail' performer.user.id %}" class="text-blue-600 hover:text-blue-800 font-semibold">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Logins -->
+    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">🕐 Recent Logins</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Login Time</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for login in recent_logins %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ login.user.username }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ login.login_time|date:"M d, Y H:i" }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ login.ip_address|default:"N/A" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-gray-500">No recent logins</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Unit-wise Statistics -->
+    {% if unit_stats %}
+    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">📚 Unit-wise Statistics (Top 10)</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject - Unit</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Attempts</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Users</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Score</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for key, stats in unit_stats %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ stats.subject }} - Unit {{ stats.unit }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ stats.total_attempts }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ stats.users_count }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full {% if stats.avg_percentage >= 70 %}bg-green-100 text-green-800{% elif stats.avg_percentage >= 50 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ stats.avg_percentage }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Subject-wise Statistics -->
+    {% if subject_stats %}
+    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">📖 Subject-wise Statistics</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Attempts</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Users</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Score</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for subject_name, stats in subject_stats %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ subject_name }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ stats.total_attempts }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ stats.users_count }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full {% if stats.avg_percentage >= 70 %}bg-green-100 text-green-800{% elif stats.avg_percentage >= 50 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ stats.avg_percentage }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- All Users Table -->
+    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">👥 All Users</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Logins</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quiz Attempts</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Score</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for user in users %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ user.username }}</div>
+                            {% if user.is_staff %}
+                            <div class="text-xs text-blue-600">Staff</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.email|default:"—" }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.login_count|default:0 }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.quiz_attempts_count|default:0 }}</td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
+                            {% if user.quiz_attempts_count > 0 and user.total_questions and user.total_questions > 0 %}
+                                {% widthratio user.total_score user.total_questions 100 as avg_percentage %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full {% if avg_percentage >= 70 %}bg-green-100 text-green-800{% elif avg_percentage >= 50 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ avg_percentage }}%
+                                </span>
+                            {% else %}
+                                <span class="text-sm text-gray-400">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% if user.last_login %}
+                                {{ user.last_login|date:"M d, Y H:i" }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{% url 'accounts:admin_user_detail' user.id %}" class="text-blue-600 hover:text-blue-800 font-semibold">View Details</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">No users found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

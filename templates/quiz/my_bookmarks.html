@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookmarks - QuizNjoy{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-6">
+        <a href="{% url 'accounts:profile' %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Back to Profile
+        </a>
+    </div>
+    <div class="bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl shadow-xl p-6 md:p-8 mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold mb-2">My Bookmarks</h1>
+        <p class="opacity-90">MCQ and programming questions you saved for later.</p>
+    </div>
+    {% if mcq_bookmarks %}
+    <div class="bg-white rounded-lg shadow-xl p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">MCQ Bookmarks</h2>
+        <ul class="space-y-4">
+            {% for bm in mcq_bookmarks %}
+            <li class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                <p class="text-sm text-gray-500">{{ bm.question.subject.name }} · Unit {{ bm.question.unit }}</p>
+                <p class="font-medium text-gray-900 mt-1">{{ bm.question.question_text|truncatewords:30 }}</p>
+                <a href="{% url 'quiz:select_unit' bm.question.subject.id %}" class="inline-block mt-2 text-blue-600 hover:underline text-sm">Go to unit →</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% if prog_bookmarks %}
+    <div class="bg-white rounded-lg shadow-xl p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Programming Bookmarks</h2>
+        <ul class="space-y-4">
+            {% for bm in prog_bookmarks %}
+            <li class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                <p class="text-sm text-gray-500">{{ bm.programming_question.subject.name }} · Unit {{ bm.programming_question.unit }}</p>
+                <p class="font-medium text-gray-900 mt-1">{{ bm.programming_question.question_text|truncatewords:30 }}</p>
+                <a href="{% url 'quiz:view_programming_questions' bm.programming_question.subject.id bm.programming_question.unit %}" class="inline-block mt-2 text-blue-600 hover:underline text-sm">Open programming →</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% if not mcq_bookmarks and not prog_bookmarks %}
+    <div class="bg-white rounded-lg shadow-xl p-8 text-center text-gray-500">
+        <p class="text-lg">You have no bookmarks yet.</p>
+        <p class="mt-2">Bookmark questions from quizzes or programming pages to see them here.</p>
+        <a href="{% url 'quiz:select_semester' %}" class="inline-block mt-4 text-blue-600 hover:underline">Take a quiz</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

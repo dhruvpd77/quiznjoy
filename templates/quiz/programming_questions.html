@@ -1,0 +1,905 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Programming Questions - {{ subject.name }} Unit {{ unit }}{% endblock %}
+
+{% block content %}
+<!-- CodeMirror CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.css">
+
+{% csrf_token %}
+<div class="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+    <!-- Back Button -->
+    <div class="mb-4 sm:mb-6">
+        <a href="{% url 'quiz:select_unit' subject.id %}" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium transition duration-200 text-sm sm:text-base">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Units
+        </a>
+    </div>
+    
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8">
+        <div class="flex items-center gap-3 sm:gap-4 mb-3">
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-lg">
+                📝
+            </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-1">{{ subject.name }}</h1>
+                <p class="text-base sm:text-lg md:text-xl opacity-90">{{ unit_title }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 text-sm sm:text-base opacity-75">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span>{{ programming_questions|length }} Programming Question{{ programming_questions|length|pluralize }}</span>
+        </div>
+    </div>
+    
+    {% if programming_questions %}
+        <div class="space-y-4 sm:space-y-6">
+            {% for question in programming_questions %}
+            <div class="bg-white rounded-xl sm:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+                <div class="p-5 sm:p-6 md:p-8">
+                    <!-- Question Header -->
+                    <div class="flex items-start gap-4 sm:gap-5 mb-4 sm:mb-6">
+                        <div class="flex-shrink-0">
+                            <div class="bg-gradient-to-br from-green-500 to-emerald-600 text-white w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                {{ forloop.counter }}
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-semibold text-green-700 bg-green-50 border border-green-200 uppercase tracking-wide">
+                                    Programming Question
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Question Text: preserves indentation (Full Stack/code) and supports math formulas -->
+                    <div class="mb-4 sm:mb-6">
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-800 border-l-4 border-green-500 rounded-lg p-4 sm:p-6 overflow-x-auto">
+                            <div class="math-render text-xs sm:text-sm md:text-base font-mono whitespace-pre-wrap break-words leading-relaxed m-0" style="font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;">{{ question.question_text }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Question Image (if available) -->
+                    {% if question.question_image %}
+                    <div class="mb-4 sm:mb-6">
+                        <div class="rounded-lg overflow-hidden border-2 border-gray-200 shadow-md">
+                            <img src="{{ question.question_image.url }}" 
+                                 alt="Question Image" 
+                                 class="w-full max-w-full h-auto">
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Attached data file (CSV) for pandas/numpy/ML -->
+                    {% if question.csv_file %}
+                    <div class="mb-4 sm:mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p class="text-sm font-semibold text-amber-800 mb-1">📊 Data file attached</p>
+                        <p class="text-sm text-amber-700">When you run code, the file is available as <code class="bg-amber-100 px-1.5 py-0.5 rounded font-mono">data.csv</code> in the working directory. Example: <code class="bg-amber-100 px-1.5 py-0.5 rounded font-mono">import pandas as pd; df = pd.read_csv('data.csv')</code></p>
+                        <a href="{{ question.csv_file.url }}" target="_blank" class="inline-flex items-center gap-1 text-sm text-amber-800 hover:underline mt-2">Download file ↗</a>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Action Buttons -->
+                    <div class="mb-4 sm:mb-6 pt-4 border-t border-gray-200 flex flex-wrap gap-3">
+                        <button 
+                            type="button"
+                            onclick="generateSolution({{ question.id }})"
+                            id="solution-btn-{{ question.id }}"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm sm:text-base hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg id="solution-icon-{{ question.id }}" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            <span id="solution-btn-text-{{ question.id }}">Give Solution</span>
+                        </button>
+                        <button 
+                            type="button"
+                            onclick="toggleCodeEditor({{ question.id }})"
+                            id="solve-btn-{{ question.id }}"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold text-sm sm:text-base hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                            </svg>
+                            <span id="solve-btn-text-{{ question.id }}">Solve</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Code Editor Section (Hidden by default) -->
+                    <div id="code-editor-{{ question.id }}" class="hidden mb-4 sm:mb-6">
+                        <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-xl border border-gray-700 overflow-hidden">
+                            <!-- Editor Header -->
+                            <div class="bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-700">
+                                <div class="flex items-center gap-2">
+                                    <div class="flex gap-1.5">
+                                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                    </div>
+                                    <span class="text-gray-300 text-xs font-mono ml-2">Python Terminal</span>
+                                </div>
+                                <button 
+                                    type="button"
+                                    onclick="toggleCodeEditor({{ question.id }})"
+                                    class="text-gray-400 hover:text-white transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <!-- Code Editor -->
+                            <div class="p-4">
+                                <div id="code-input-{{ question.id }}" class="codemirror-editor"></div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="px-4 pb-4 flex flex-wrap gap-3">
+                                <button 
+                                    type="button"
+                                    onclick="runCode({{ question.id }})"
+                                    id="run-btn-{{ question.id }}"
+                                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span id="run-btn-text-{{ question.id }}">Run</span>
+                                </button>
+                                <button 
+                                    type="button"
+                                    onclick="checkWithAI({{ question.id }})"
+                                    id="check-btn-{{ question.id }}"
+                                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span id="check-btn-text-{{ question.id }}">Check with AI</span>
+                                </button>
+                                <button 
+                                    type="button"
+                                    onclick="clearCode({{ question.id }})"
+                                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Clear
+                                </button>
+                                {% if question.test_cases %}
+                                <button type="button" onclick="runTests({{ question.id }})" id="run-tests-btn-{{ question.id }}"
+                                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm shadow-md hover:shadow-lg disabled:opacity-50">
+                                    Run tests
+                                </button>
+                                {% endif %}
+                            </div>
+                            {% if question.test_cases %}
+                            <div id="test-results-{{ question.id }}" class="hidden px-4 pb-4">
+                                <div class="bg-gray-900 rounded-lg border border-gray-700 p-4 text-sm">
+                                    <div id="test-results-content-{{ question.id }}"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Output Section -->
+                            <div id="output-{{ question.id }}" class="hidden px-4 pb-4">
+                                <div class="bg-gray-900 rounded-lg border border-gray-700 p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="text-gray-400 text-xs font-semibold uppercase">Output</span>
+                                    </div>
+                                    <pre id="output-content-{{ question.id }}" class="text-green-400 font-mono text-sm whitespace-pre-wrap break-words m-0"></pre>
+                                    <pre id="error-content-{{ question.id }}" class="text-red-400 font-mono text-sm whitespace-pre-wrap break-words m-0 mt-2 hidden"></pre>
+                                </div>
+                            </div>
+                            
+                            <!-- AI Evaluation Section -->
+                            <div id="evaluation-{{ question.id }}" class="hidden px-4 pb-4">
+                                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border-2 border-purple-200 p-4">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span class="text-purple-800 font-bold text-sm sm:text-base">AI Evaluation</span>
+                                    </div>
+                                    <div id="score-{{ question.id }}" class="mb-3 hidden">
+                                        <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-purple-200">
+                                            <span class="text-purple-600 font-bold text-lg" id="score-value-{{ question.id }}"></span>
+                                            <span class="text-purple-600 text-sm">/10</span>
+                                        </div>
+                                    </div>
+                                    <div id="feedback-{{ question.id }}" class="text-purple-900 text-sm sm:text-base whitespace-pre-wrap"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Loading Indicator for Code Execution -->
+                            <div id="code-loading-{{ question.id }}" class="hidden px-4 pb-4">
+                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
+                                    <div class="flex items-center gap-3">
+                                        <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span class="text-blue-800 font-medium text-sm" id="code-loading-text-{{ question.id }}">Running code...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading Indicator (Hidden by default) -->
+                    <div id="loading-{{ question.id }}" class="hidden mb-4 sm:mb-6">
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-5 sm:p-6 shadow-md">
+                            <div class="flex items-center gap-3">
+                                <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span class="text-blue-800 font-medium">Generating solution...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Error Message (Hidden by default) -->
+                    <div id="error-{{ question.id }}" class="hidden mb-4 sm:mb-6">
+                        <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-5 sm:p-6 shadow-md">
+                            <div class="flex items-center gap-2 mb-2">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <h3 class="text-lg font-bold text-red-900">Error</h3>
+                            </div>
+                            <p id="error-message-{{ question.id }}" class="text-red-800"></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Solution Section (Hidden by default) -->
+                    <div id="solution-{{ question.id }}" class="hidden mb-4 sm:mb-6">
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-5 sm:p-6 shadow-md">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <h3 class="text-lg sm:text-xl font-bold text-blue-900">Solution</h3>
+                                </div>
+                                <button 
+                                    type="button"
+                                    onclick="toggleSolution({{ question.id }})"
+                                    class="text-blue-600 hover:text-blue-800 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <div id="solution-content-{{ question.id }}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl p-8 sm:p-10 md:p-12 text-center border border-gray-100">
+            <div class="mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No Programming Questions</h3>
+            <p class="text-xs sm:text-sm text-gray-500 px-4">No programming questions have been added for this unit yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function generateSolution(questionId) {
+    const btn = document.getElementById('solution-btn-' + questionId);
+    const btnText = document.getElementById('solution-btn-text-' + questionId);
+    const btnIcon = document.getElementById('solution-icon-' + questionId);
+    const loadingDiv = document.getElementById('loading-' + questionId);
+    const errorDiv = document.getElementById('error-' + questionId);
+    const solutionDiv = document.getElementById('solution-' + questionId);
+    const solutionContent = document.getElementById('solution-content-' + questionId);
+    
+    // Disable button and show loading
+    btn.disabled = true;
+    btnText.textContent = 'Generating...';
+    loadingDiv.classList.remove('hidden');
+    errorDiv.classList.add('hidden');
+    solutionDiv.classList.add('hidden');
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrftoken = csrfToken ? csrfToken.value : getCookie('csrftoken');
+    
+    // Make AJAX request
+    fetch(`/quiz/programming-question/${questionId}/solution/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadingDiv.classList.add('hidden');
+        btn.disabled = false;
+        btnText.textContent = 'Give Solution';
+        
+        if (data.success) {
+            // Parse and display solution
+            const solution = data.solution;
+            const solutions = solution.split('|||OPTION|||').map(s => s.trim()).filter(s => s);
+            
+            let html = '';
+            if (solutions.length > 1) {
+                // Multiple solutions
+                solutions.forEach((sol, index) => {
+                    html += `
+                        <div class="mb-4 ${index < solutions.length - 1 ? 'pb-4 border-b border-blue-200' : ''}">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">
+                                    ${index + 1}
+                                </span>
+                                <span class="text-sm sm:text-base font-semibold text-blue-800">Option ${index + 1}</span>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-blue-200">
+                                <pre class="text-xs sm:text-sm md:text-base font-mono whitespace-pre-wrap break-words leading-relaxed m-0" style="font-family: 'Consolas', 'Monaco', 'Courier New', monospace; color: #1f2937;">${escapeHtml(sol)}</pre>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                // Single solution
+                html = `
+                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                        <pre class="text-xs sm:text-sm md:text-base font-mono whitespace-pre-wrap break-words leading-relaxed m-0" style="font-family: 'Consolas', 'Monaco', 'Courier New', monospace; color: #1f2937;">${escapeHtml(solutions[0] || solution)}</pre>
+                    </div>
+                `;
+            }
+            
+            solutionContent.innerHTML = html;
+            solutionDiv.classList.remove('hidden');
+        } else {
+            // Show error
+            document.getElementById('error-message-' + questionId).textContent = data.error || 'Failed to generate solution';
+            errorDiv.classList.remove('hidden');
+        }
+    })
+    .catch(error => {
+        loadingDiv.classList.add('hidden');
+        btn.disabled = false;
+        btnText.textContent = 'Give Solution';
+        document.getElementById('error-message-' + questionId).textContent = 'Network error. Please try again.';
+        errorDiv.classList.remove('hidden');
+        console.error('Error:', error);
+    });
+}
+
+function toggleSolution(questionId) {
+    const solutionDiv = document.getElementById('solution-' + questionId);
+    solutionDiv.classList.add('hidden');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Code Editor Functions
+let codeOutputs = {}; // Store outputs for each question
+let codeEditors = {}; // Store CodeMirror editor instances
+
+function toggleCodeEditor(questionId) {
+    const editor = document.getElementById('code-editor-' + questionId);
+    const solveBtn = document.getElementById('solve-btn-' + questionId);
+    const solveBtnText = document.getElementById('solve-btn-text-' + questionId);
+    
+    if (editor.classList.contains('hidden')) {
+        editor.classList.remove('hidden');
+        solveBtnText.textContent = 'Close Terminal';
+        
+        // Initialize CodeMirror if not already initialized
+        if (!codeEditors[questionId]) {
+            initializeCodeEditor(questionId);
+        }
+        
+        // Focus on code editor
+        setTimeout(() => {
+            if (codeEditors[questionId]) {
+                codeEditors[questionId].focus();
+            }
+        }, 100);
+    } else {
+        editor.classList.add('hidden');
+        solveBtnText.textContent = 'Solve';
+    }
+}
+
+function initializeCodeEditor(questionId) {
+    const textarea = document.getElementById('code-input-' + questionId);
+    
+    // Initialize CodeMirror
+    const editor = CodeMirror(textarea, {
+        mode: 'python',
+        theme: 'monokai',
+        lineNumbers: true,
+        indentUnit: 4,
+        indentWithTabs: false,
+        smartIndent: true,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        lineWrapping: true,
+        styleActiveLine: true,
+        extraKeys: {
+            "Tab": function(cm) {
+                // Smart indentation on Tab
+                if (cm.somethingSelected()) {
+                    cm.indentSelection("add");
+                } else {
+                    cm.replaceSelection("    ", "end"); // 4 spaces for Python
+                }
+            },
+            "Shift-Tab": function(cm) {
+                cm.indentSelection("subtract");
+            },
+            "Enter": function(cm) {
+                // Auto-indent on Enter using CodeMirror's smart indent
+                if (cm.somethingSelected()) {
+                    cm.replaceSelection("\n");
+                } else {
+                    // Use CodeMirror's newlineAndIndent command
+                    cm.execCommand("newlineAndIndent");
+                }
+            }
+        },
+        placeholder: "# Write your Python code here...\n# Example:\ndef solve():\n    # Your solution\n    pass\n\nsolve()"
+    });
+    
+    // Set editor height
+    editor.setSize("100%", "320px");
+    
+    // Store editor instance
+    codeEditors[questionId] = editor;
+    
+    // Adjust height on mobile
+    if (window.innerWidth < 640) {
+        editor.setSize("100%", "256px");
+    }
+}
+
+function runCode(questionId) {
+    const runBtn = document.getElementById('run-btn-' + questionId);
+    const runBtnText = document.getElementById('run-btn-text-' + questionId);
+    const loadingDiv = document.getElementById('code-loading-' + questionId);
+    const loadingText = document.getElementById('code-loading-text-' + questionId);
+    const outputDiv = document.getElementById('output-' + questionId);
+    const outputContent = document.getElementById('output-content-' + questionId);
+    const errorContent = document.getElementById('error-content-' + questionId);
+    const evaluationDiv = document.getElementById('evaluation-' + questionId);
+    
+    // Get code from CodeMirror editor
+    const editor = codeEditors[questionId];
+    if (!editor) {
+        alert('Code editor not initialized. Please close and reopen the terminal.');
+        return;
+    }
+    
+    const code = editor.getValue().trim();
+    
+    if (!code) {
+        alert('Please write some code first!');
+        return;
+    }
+    
+    
+    // Disable button and show loading
+    runBtn.disabled = true;
+    runBtnText.textContent = 'Running...';
+    loadingDiv.classList.remove('hidden');
+    loadingText.textContent = 'Executing code...';
+    outputDiv.classList.add('hidden');
+    evaluationDiv.classList.add('hidden');
+    errorContent.classList.add('hidden');
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrftoken = csrfToken ? csrfToken.value : getCookie('csrftoken');
+    
+    // Make AJAX request with code and inputs
+    fetch(`/quiz/programming-question/${questionId}/execute/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ code: code })
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadingDiv.classList.add('hidden');
+        runBtn.disabled = false;
+        runBtnText.textContent = 'Run';
+        outputDiv.classList.remove('hidden');
+        
+        if (data.success) {
+            outputContent.textContent = data.output || '(No output)';
+            errorContent.classList.add('hidden');
+            // Store output for AI evaluation
+            codeOutputs[questionId] = {
+                code: code,
+                output: data.output || ''
+            };
+        } else {
+            outputContent.textContent = data.output || '';
+            // Format error message - preserve newlines and show helpful info
+            let errorMsg = data.error || 'Execution failed';
+            errorContent.className = 'text-red-400 font-mono text-sm whitespace-pre-wrap break-words m-0 mt-2';
+            errorContent.textContent = errorMsg;
+            errorContent.classList.remove('hidden');
+            // Store output for AI evaluation
+            codeOutputs[questionId] = {
+                code: code,
+                output: data.error || ''
+            };
+        }
+    })
+    .catch(error => {
+        loadingDiv.classList.add('hidden');
+        runBtn.disabled = false;
+        runBtnText.textContent = 'Run';
+        outputDiv.classList.remove('hidden');
+        outputContent.textContent = '';
+        errorContent.textContent = 'Network error. Please try again.';
+        errorContent.classList.remove('hidden');
+        console.error('Error:', error);
+    });
+}
+
+function runTests(questionId) {
+    const editor = codeEditors[questionId];
+    if (!editor) { alert('Code editor not initialized.'); return; }
+    const code = editor.getValue().trim();
+    if (!code) { alert('Write code first.'); return; }
+    const btn = document.getElementById('run-tests-btn-' + questionId);
+    const resultsDiv = document.getElementById('test-results-' + questionId);
+    const contentDiv = document.getElementById('test-results-content-' + questionId);
+    if (!resultsDiv || !contentDiv) return;
+    btn.disabled = true;
+    contentDiv.innerHTML = 'Running tests...';
+    resultsDiv.classList.remove('hidden');
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+    fetch(`/quiz/programming-question/${questionId}/run-tests/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ code: code })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        if (!data.success) {
+            contentDiv.innerHTML = '<span class="text-red-400">' + (data.error || 'Error') + '</span>';
+            return;
+        }
+        let html = '<span class="text-white font-semibold">' + data.passed + '/' + data.total + ' tests passed</span><br>';
+        data.results.forEach(function(r) {
+            const ok = r.passed;
+            html += '<div class="mt-2 ' + (ok ? 'text-green-400' : 'text-red-400') + '">Test ' + r.index + ': ' + (ok ? 'Passed' : 'Failed');
+            if (r.expected !== undefined) html += ' (expected: ' + escapeHtml(r.expected) + ')';
+            if (r.actual !== undefined) html += ' (got: ' + escapeHtml(r.actual) + ')';
+            if (r.error) html += ' ' + escapeHtml(r.error);
+            html += '</div>';
+        });
+        contentDiv.innerHTML = html;
+    })
+    .catch(() => {
+        btn.disabled = false;
+        contentDiv.innerHTML = '<span class="text-red-400">Network error.</span>';
+    });
+}
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function checkWithAI(questionId) {
+    const checkBtn = document.getElementById('check-btn-' + questionId);
+    const checkBtnText = document.getElementById('check-btn-text-' + questionId);
+    const loadingDiv = document.getElementById('code-loading-' + questionId);
+    const loadingText = document.getElementById('code-loading-text-' + questionId);
+    const evaluationDiv = document.getElementById('evaluation-' + questionId);
+    const scoreDiv = document.getElementById('score-' + questionId);
+    const scoreValue = document.getElementById('score-value-' + questionId);
+    const feedbackDiv = document.getElementById('feedback-' + questionId);
+    
+    // Get code from CodeMirror editor
+    const editor = codeEditors[questionId];
+    if (!editor) {
+        alert('Code editor not initialized. Please close and reopen the terminal.');
+        return;
+    }
+    
+    const code = editor.getValue().trim();
+    
+    if (!code) {
+        alert('Please write some code first!');
+        return;
+    }
+    
+    // Get stored output or empty string
+    const output = codeOutputs[questionId] ? codeOutputs[questionId].output : '';
+    
+    // Disable button and show loading
+    checkBtn.disabled = true;
+    checkBtnText.textContent = 'Evaluating...';
+    loadingDiv.classList.remove('hidden');
+    loadingText.textContent = 'AI is checking your code...';
+    evaluationDiv.classList.add('hidden');
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrftoken = csrfToken ? csrfToken.value : getCookie('csrftoken');
+    
+    // Make AJAX request
+    fetch(`/quiz/programming-question/${questionId}/evaluate/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ 
+            code: code,
+            output: output
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadingDiv.classList.add('hidden');
+        checkBtn.disabled = false;
+        checkBtnText.textContent = 'Check with AI';
+        evaluationDiv.classList.remove('hidden');
+        
+        if (data.success) {
+            // Show score if available
+            if (data.score !== null && data.score !== undefined) {
+                scoreValue.textContent = data.score;
+                scoreDiv.classList.remove('hidden');
+            } else {
+                scoreDiv.classList.add('hidden');
+            }
+            
+            // Show feedback
+            feedbackDiv.textContent = data.feedback || data.full_evaluation || 'Evaluation completed.';
+        } else {
+            feedbackDiv.textContent = 'Error: ' + (data.error || 'Failed to evaluate code');
+            scoreDiv.classList.add('hidden');
+        }
+    })
+    .catch(error => {
+        loadingDiv.classList.add('hidden');
+        checkBtn.disabled = false;
+        checkBtnText.textContent = 'Check with AI';
+        evaluationDiv.classList.remove('hidden');
+        feedbackDiv.textContent = 'Network error. Please try again.';
+        scoreDiv.classList.add('hidden');
+        console.error('Error:', error);
+    });
+}
+
+function clearCode(questionId) {
+    const outputDiv = document.getElementById('output-' + questionId);
+    const evaluationDiv = document.getElementById('evaluation-' + questionId);
+    
+    if (confirm('Are you sure you want to clear the code?')) {
+        const editor = codeEditors[questionId];
+        if (editor) {
+            editor.setValue('');
+            editor.focus();
+        }
+        outputDiv.classList.add('hidden');
+        evaluationDiv.classList.add('hidden');
+        delete codeOutputs[questionId];
+    }
+}
+</script>
+
+<!-- CodeMirror JavaScript (load after DOM) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/selection/active-line.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/python-hint.min.js"></script>
+
+<style>
+/* Ensure proper Python code formatting */
+pre {
+    tab-size: 4;
+    -moz-tab-size: 4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    line-height: 1.7;
+}
+
+/* Better code readability */
+pre code {
+    font-family: inherit;
+}
+
+/* Responsive code blocks */
+@media (max-width: 640px) {
+    pre {
+        font-size: 0.75rem;
+        padding: 0.75rem;
+        line-height: 1.6;
+    }
+}
+
+/* Smooth hover effects */
+.group:hover {
+    transform: translateY(-2px);
+}
+
+/* Better spacing for question cards */
+@media (min-width: 640px) {
+    .space-y-4 > * + * {
+        margin-top: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .space-y-4 > * + * {
+        margin-top: 2rem;
+    }
+}
+
+/* Smooth solution toggle animation */
+[id^="solution-"] {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* CodeMirror Editor Styles */
+.codemirror-editor {
+    border: 1px solid #374151;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.CodeMirror {
+    height: 320px !important;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    background-color: #1f2937 !important;
+    color: #10b981 !important;
+}
+
+.CodeMirror-scroll {
+    min-height: 320px;
+}
+
+.CodeMirror-gutters {
+    background-color: #111827 !important;
+    border-right: 1px solid #374151 !important;
+}
+
+.CodeMirror-linenumber {
+    color: #6b7280 !important;
+}
+
+.CodeMirror-cursor {
+    border-left: 2px solid #10b981 !important;
+}
+
+.CodeMirror-selected {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+.CodeMirror-focused .CodeMirror-selected {
+    background-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.CodeMirror-activeline-background {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* CodeMirror bracket matching */
+.CodeMirror-matchingbracket {
+    background-color: rgba(16, 185, 129, 0.4) !important;
+    color: #10b981 !important;
+    font-weight: bold;
+}
+
+.CodeMirror-nonmatchingbracket {
+    background-color: rgba(239, 68, 68, 0.3) !important;
+    color: #ef4444 !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+    .CodeMirror {
+        height: 256px !important;
+        font-size: 13px;
+    }
+    
+    .CodeMirror-scroll {
+        min-height: 256px;
+    }
+}
+
+/* Code editor animation */
+[id^="code-editor-"] {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Output terminal styling */
+pre[id^="output-content-"],
+pre[id^="error-content-"] {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Mobile responsive code editor */
+@media (max-width: 640px) {
+    textarea[id^="code-input-"] {
+        font-size: 0.875rem;
+        padding: 0.75rem;
+    }
+    
+    [id^="code-editor-"] .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+</style>
+{% endblock %}

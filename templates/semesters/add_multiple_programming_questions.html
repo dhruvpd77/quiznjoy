@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Multiple Programming Questions - {{ subject.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'semesters:manage_programming_questions' subject.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Programming Questions
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-xl p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Add Multiple Programming Questions</h1>
+        <p class="text-gray-600 mb-8">{{ subject.name }} - {{ subject.semester.name }}</p>
+        
+        <!-- Tabs for Manual Entry vs Excel Upload -->
+        <div class="mb-6 border-b border-gray-200">
+            <div class="flex space-x-4">
+                <button type="button" onclick="showManualEntry()" id="manual-tab" class="px-6 py-3 font-semibold text-blue-600 border-b-2 border-blue-600">
+                    Manual Entry
+                </button>
+                <button type="button" onclick="showExcelUpload()" id="excel-tab" class="px-6 py-3 font-semibold text-gray-500 hover:text-gray-700">
+                    Excel Upload
+                </button>
+            </div>
+        </div>
+        
+        <!-- Manual Entry Section -->
+        <div id="manual-entry-section">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                <div class="flex">
+                    <svg class="h-5 w-5 text-blue-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h3 class="text-sm font-medium text-blue-800">Format Instructions:</h3>
+                        <ul class="text-sm text-blue-700 mt-1 list-disc list-inside space-y-1">
+                            <li>Start each question with <code class="bg-blue-100 px-1 py-0.5 rounded">Q:</code> or <code class="bg-blue-100 px-1 py-0.5 rounded">Question:</code></li>
+                            <li>Optionally add solution with <code class="bg-blue-100 px-1 py-0.5 rounded">S:</code> or <code class="bg-blue-100 px-1 py-0.5 rounded">Solution:</code></li>
+                            <li>Each question will be added to the selected unit</li>
+                            <li>Example format shown below</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label for="unit" class="block text-sm font-medium text-gray-700 mb-2">
+                    Unit Number <span class="text-red-600">*</span>
+                </label>
+                <select name="unit" id="unit" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="1">Unit 1</option>
+                    <option value="2">Unit 2</option>
+                    <option value="3">Unit 3</option>
+                    <option value="4">Unit 4</option>
+                    <option value="5">Unit 5</option>
+                    <option value="6">Unit 6</option>
+                    <option value="7">Unit 7</option>
+                    <option value="8">Unit 8</option>
+                    <option value="9">Unit 9</option>
+                    <option value="10">Unit 10</option>
+                </select>
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" name="questions_only" id="questions_only" value="1"
+                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                <label for="questions_only" class="ml-2 text-sm font-medium text-gray-700">
+                    Add questions only (without solutions)
+                </label>
+            </div>
+            
+            <div>
+                <label for="questions_data" class="block text-sm font-medium text-gray-700 mb-2">
+                    Questions Data <span class="text-red-600">*</span>
+                </label>
+                <textarea name="questions_data" id="questions_data" rows="20" required
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono"
+                          placeholder="Q: Write a Python function to calculate factorial&#10;&#10;S: def factorial(n):&#10;    if n == 0 or n == 1:&#10;        return 1&#10;    return n * factorial(n - 1)&#10;&#10;Q: Write a function to check if a number is prime&#10;&#10;S: def is_prime(n):&#10;    if n < 2:&#10;        return False&#10;    for i in range(2, int(n**0.5) + 1):&#10;        if n % i == 0:&#10;            return False&#10;    return True"></textarea>
+                <p class="mt-1 text-sm text-gray-500">Enter questions in the format shown above. Each question should start with Q: or Question:</p>
+            </div>
+            
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2">Example Format:</h4>
+                <pre class="text-xs text-gray-600 font-mono whitespace-pre-wrap">Q: Write a Python function to calculate factorial
+
+S: def factorial(n):
+    if n == 0 or n == 1:
+        return 1
+    return n * factorial(n - 1)
+
+Q: Write a function to check if a number is prime
+
+S: def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True</pre>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="added_by" class="block text-sm font-medium text-gray-700 mb-2">
+                        Added By (Optional)
+                    </label>
+                    <input type="text" name="added_by" id="added_by"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label for="verified_by" class="block text-sm font-medium text-gray-700 mb-2">
+                        Verified By (Optional)
+                    </label>
+                    <input type="text" name="verified_by" id="verified_by"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button type="submit" name="submit_type" value="manual" class="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-white font-semibold py-3 rounded-lg transition duration-300 transform hover:scale-105 shadow-lg">
+                    Add Questions
+                </button>
+                <a href="{% url 'semesters:manage_programming_questions' subject.id %}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-lg text-center transition duration-300">
+                    Cancel
+                </a>
+            </div>
+            </form>
+        </div>
+        
+        <!-- Excel Upload Section -->
+        <div id="excel-upload-section" class="hidden">
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+                <div class="flex">
+                    <svg class="h-5 w-5 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h3 class="text-sm font-medium text-green-800">Excel Format Instructions:</h3>
+                        <ul class="text-sm text-green-700 mt-1 list-disc list-inside space-y-1">
+                            <li>Excel file must have exactly <strong>2 columns</strong>: <code class="bg-green-100 px-1 py-0.5 rounded">unit_number</code> and <code class="bg-green-100 px-1 py-0.5 rounded">questions</code></li>
+                            <li>Column headers must be: <code class="bg-green-100 px-1 py-0.5 rounded">unit_number</code> and <code class="bg-green-100 px-1 py-0.5 rounded">questions</code></li>
+                            <li>Each row will create a programming question in the specified unit</li>
+                            <li>Questions will be added without solutions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <div>
+                    <label for="excel_file" class="block text-sm font-medium text-gray-700 mb-2">
+                        Excel File <span class="text-red-600">*</span>
+                    </label>
+                    <input type="file" name="excel_file" id="excel_file" accept=".xlsx,.xls" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    <p class="mt-1 text-sm text-gray-500">Upload Excel file (.xlsx or .xls) with unit_number and questions columns</p>
+                </div>
+                
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Example Excel Format:</h4>
+                    <table class="text-xs text-gray-600 border-collapse border border-gray-300 w-full">
+                        <thead>
+                            <tr class="bg-gray-200">
+                                <th class="border border-gray-300 px-2 py-1">unit_number</th>
+                                <th class="border border-gray-300 px-2 py-1">questions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-gray-300 px-2 py-1">1</td>
+                                <td class="border border-gray-300 px-2 py-1">Write a Python function to calculate factorial</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 px-2 py-1">2</td>
+                                <td class="border border-gray-300 px-2 py-1">Write a function to check if a number is prime</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 px-2 py-1">1</td>
+                                <td class="border border-gray-300 px-2 py-1">Write a program to reverse a string</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="excel_added_by" class="block text-sm font-medium text-gray-700 mb-2">
+                            Added By (Optional)
+                        </label>
+                        <input type="text" name="added_by" id="excel_added_by"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div>
+                        <label for="excel_verified_by" class="block text-sm font-medium text-gray-700 mb-2">
+                            Verified By (Optional)
+                        </label>
+                        <input type="text" name="verified_by" id="excel_verified_by"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button type="submit" name="submit_type" value="excel" class="flex-1 bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-semibold py-3 rounded-lg transition duration-300 transform hover:scale-105 shadow-lg">
+                        Upload & Add Questions
+                    </button>
+                    <a href="{% url 'semesters:manage_programming_questions' subject.id %}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-lg text-center transition duration-300">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showManualEntry() {
+    document.getElementById('manual-entry-section').classList.remove('hidden');
+    document.getElementById('excel-upload-section').classList.add('hidden');
+    document.getElementById('manual-tab').classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+    document.getElementById('manual-tab').classList.remove('text-gray-500');
+    document.getElementById('excel-tab').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+    document.getElementById('excel-tab').classList.add('text-gray-500');
+}
+
+function showExcelUpload() {
+    document.getElementById('manual-entry-section').classList.add('hidden');
+    document.getElementById('excel-upload-section').classList.remove('hidden');
+    document.getElementById('excel-tab').classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+    document.getElementById('excel-tab').classList.remove('text-gray-500');
+    document.getElementById('manual-tab').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+    document.getElementById('manual-tab').classList.add('text-gray-500');
+}
+</script>
+{% endblock %}
+
