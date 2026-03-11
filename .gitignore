@@ -26,8 +26,8 @@ MANIFEST
 # Django
 *.log
 local_settings.py
-# db.sqlite3 - included in repo per project request
-# db.sqlite3-journal - included in repo
+db.sqlite3
+db.sqlite3-journal
 /media
 /staticfiles
 # /static  # Commented out - static folder is included in repository
