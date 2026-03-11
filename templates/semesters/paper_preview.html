@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Paper Preview - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <a href="{% url 'semesters:paper_generation' %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-indigo-300 dark:hover:text-indigo-200 font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Start over
+        </a>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'semesters:paper_download' %}" class="inline-flex items-center bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Download Word File
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-slate-200 dark:border-slate-600">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2">Paper Preview</h1>
+        <p class="text-gray-600 dark:text-slate-400 mb-6">{{ subject_name }} – {{ questions|length }} questions ({{ options_count }} options each)</p>
+
+        <div class="space-y-4">
+            {% for q in questions %}
+                <div class="border-2 border-slate-200 dark:border-slate-600 rounded-xl p-6">
+                    <div class="flex items-start gap-5">
+                        <div class="flex flex-col items-center gap-2">
+                            <span class="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center">
+                                Q-{{ forloop.counter }}
+                            </span>
+                            <a href="{% url 'semesters:paper_shuffle_question' forloop.counter0 %}" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50 transition" title="Replace with another question from same unit">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                Shuffle
+                            </a>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <pre class="text-xs sm:text-sm md:text-base font-mono whitespace-pre-wrap text-gray-800 dark:text-slate-200 mb-4">{{ q.question_text }}</pre>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                                <div>A) {{ q.option_a }}</div>
+                                <div>B) {{ q.option_b }}</div>
+                                <div>C) {{ q.option_c }}</div>
+                                <div>D) {{ q.option_d }}</div>
+                                {% if options_count == 6 %}
+                                    <div>E) Error</div>
+                                    <div>F) None of the above</div>
+                                {% elif options_count == 7 %}
+                                    <div>E) (blank)</div>
+                                    <div>F) Error</div>
+                                    <div>G) None of the above</div>
+                                {% elif options_count == 8 %}
+                                    <div>E) (blank)</div>
+                                    <div>F) (blank)</div>
+                                    <div>G) Error</div>
+                                    <div>H) None of the above</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-600">
+            <a href="{% url 'semesters:paper_download' %}" class="inline-flex items-center bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg transition text-lg">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Download Word File
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -13,6 +13,7 @@ import openpyxl
 from io import BytesIO
 import os
 import csv
+import random
 from PIL import Image
 
 @staff_member_required
@@ -1394,3 +1395,244 @@ def programming_question_analytics(request):
         'daily_trend': daily_trend,
     }
     return render(request, 'semesters/programming_question_analytics.html', context)
+
+
+# ============== Paper Generation ==============
+
+@staff_member_required
+def paper_generation(request):
+    """Step 1: Select subject and options count (6, 7, or 8)"""
+    subjects = Subject.objects.annotate(
+        mcq_count=Count('questions', filter=Q(questions__status='published'))
+    ).filter(mcq_count__gt=0).order_by('semester', 'name')
+    if request.method == 'POST':
+        subject_id = request.POST.get('subject')
+        options_count = request.POST.get('options_count', '6')
+        if subject_id:
+            url = reverse('semesters:paper_generation_units', kwargs={'subject_id': int(subject_id)})
+            return redirect(f'{url}?options_count={options_count}')
+        messages.error(request, 'Please select a subject.')
+    return render(request, 'semesters/paper_generation.html', {'subjects': subjects})
+
+
+@staff_member_required
+def paper_generation_units(request, subject_id):
+    """Step 2: Specify how many MCQs from each unit"""
+    subject = get_object_or_404(Subject, id=subject_id)
+    # Get distinct units that have MCQs
+    units_with_counts = list(
+        Question.objects.filter(subject=subject, status='published')
+        .values('unit')
+        .annotate(count=Count('id'))
+        .order_by('unit')
+    )
+    if not units_with_counts:
+        messages.warning(request, f'No MCQs found for {subject.name}. Add questions first.')
+        return redirect('semesters:paper_generation')
+    if request.method == 'POST':
+        options_count = int(request.POST.get('options_count', 6))
+        if options_count not in (6, 7, 8):
+            options_count = 6
+        unit_counts = {}
+        for u in units_with_counts:
+            key = f'unit_{u["unit"]}'
+            val = request.POST.get(key, '0')
+            try:
+                unit_counts[u['unit']] = max(0, int(val))
+            except ValueError:
+                unit_counts[u['unit']] = 0
+        # Fetch questions: random sample per unit
+        import random
+        all_questions = []
+        for unit_num, count in unit_counts.items():
+            if count <= 0:
+                continue
+            qs = list(
+                Question.objects.filter(subject=subject, unit=unit_num, status='published')
+                .order_by('?')[:count]
+            )
+            all_questions.extend(qs)
+        if not all_questions:
+            messages.error(request, 'Please specify at least 1 MCQ from any unit.')
+            return render(request, 'semesters/paper_generation_units.html', {
+                'subject': subject,
+                'units_with_counts': units_with_counts,
+                'options_count': options_count,
+            })
+        # Store in session for preview and download
+        request.session['paper_question_ids'] = [q.id for q in all_questions]
+        request.session['paper_options_count'] = options_count
+        request.session['paper_subject_name'] = subject.name
+        return redirect('semesters:paper_preview')
+    options_count = int(request.GET.get('options_count', 6))
+    if options_count not in (6, 7, 8):
+        options_count = 6
+    return render(request, 'semesters/paper_generation_units.html', {
+        'subject': subject,
+        'units_with_counts': units_with_counts,
+        'options_count': options_count,
+    })
+
+
+@staff_member_required
+def paper_preview(request):
+    """Step 3: Preview selected MCQs and Download button"""
+    qids = request.session.get('paper_question_ids', [])
+    options_count = request.session.get('paper_options_count', 6)
+    subject_name = request.session.get('paper_subject_name', '')
+    if not qids:
+        messages.warning(request, 'No questions selected. Start from Paper Generation.')
+        return redirect('semesters:paper_generation')
+    questions = Question.objects.filter(id__in=qids).order_by('unit', 'id')
+    # Preserve order from session
+    id_order = {qid: i for i, qid in enumerate(qids)}
+    questions = sorted(questions, key=lambda q: id_order.get(q.id, 999))
+    return render(request, 'semesters/paper_preview.html', {
+        'questions': questions,
+        'options_count': options_count,
+        'subject_name': subject_name,
+    })
+
+
+@staff_member_required
+def paper_shuffle_question(request, position):
+    """Replace the question at given position (0-based) with a new random question from the same unit."""
+    qids = request.session.get('paper_question_ids', [])
+    if not qids or position < 0 or position >= len(qids):
+        messages.warning(request, 'Invalid question. Start from Paper Generation.')
+        return redirect('semesters:paper_generation')
+    current_q = get_object_or_404(Question, id=qids[position])
+    # Pick a new random question from the same unit (exclude current to get a different one)
+    new_q = Question.objects.filter(
+        subject=current_q.subject, unit=current_q.unit, status='published'
+    ).exclude(id=current_q.id).order_by('?').first()
+    if not new_q:
+        messages.warning(request, 'No other questions available in this unit.')
+        return redirect('semesters:paper_preview')
+    qids = list(qids)
+    qids[position] = new_q.id
+    request.session['paper_question_ids'] = qids
+    messages.success(request, f'Q{position + 1} replaced with a new question from the same unit.')
+    return redirect('semesters:paper_preview')
+
+
+@staff_member_required
+def paper_shuffle(request):
+    """Shuffle all questions: pick new random questions from the same units, preserving unit distribution."""
+    qids = request.session.get('paper_question_ids', [])
+    if not qids:
+        messages.warning(request, 'No questions selected. Start from Paper Generation.')
+        return redirect('semesters:paper_generation')
+    # Get current questions and derive unit counts
+    current = Question.objects.filter(id__in=qids)
+    if not current.exists():
+        messages.warning(request, 'Questions no longer available. Start from Paper Generation.')
+        return redirect('semesters:paper_generation')
+    subject = current.first().subject
+    from collections import Counter
+    unit_counts = dict(Counter(current.values_list('unit', flat=True)))
+    # Re-randomize: for each unit, pick new random questions
+    all_questions = []
+    for unit_num, count in sorted(unit_counts.items()):
+        qs = list(
+            Question.objects.filter(subject=subject, unit=unit_num, status='published')
+            .order_by('?')[:count]
+        )
+        all_questions.extend(qs)
+    request.session['paper_question_ids'] = [q.id for q in all_questions]
+    messages.success(request, 'Questions shuffled successfully! New questions picked from the same units.')
+    return redirect('semesters:paper_preview')
+
+
+def _build_options_for_paper(question, options_count):
+    """Build option list for paper: 6, 7, or 8 options per user spec. Options stay in original order."""
+    base = [
+        ('A', question.option_a),
+        ('B', question.option_b),
+        ('C', question.option_c),
+        ('D', question.option_d),
+    ]
+    if options_count == 6:
+        return base + [('E', 'Error'), ('F', 'None of the above')]
+    if options_count == 7:
+        return base + [('E', ''), ('F', 'Error'), ('G', 'None of the above')]
+    if options_count == 8:
+        return base + [('E', ''), ('F', ''), ('G', 'Error'), ('H', 'None of the above')]
+    return base + [('E', 'Error'), ('F', 'None of the above')]
+
+
+@staff_member_required
+def paper_download(request):
+    """Generate and download Word file in exam format"""
+    qids = request.session.get('paper_question_ids', [])
+    options_count = request.session.get('paper_options_count', 6)
+    subject_name = request.session.get('paper_subject_name', 'Paper')
+    if not qids:
+        messages.warning(request, 'No questions selected.')
+        return redirect('semesters:paper_generation')
+    questions = Question.objects.filter(id__in=qids).order_by('unit', 'id')
+    id_order = {qid: i for i, qid in enumerate(qids)}
+    questions = sorted(questions, key=lambda q: id_order.get(q.id, 999))
+    try:
+        from docx import Document
+        from docx.shared import Pt, Inches
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+    except ImportError:
+        messages.error(request, 'python-docx is not installed. Run: pip install python-docx')
+        return redirect('semesters:paper_preview')
+    doc = Document()
+    font_name = 'Times New Roman'
+    font_size = Pt(12)
+    # Title
+    title = doc.add_paragraph()
+    title_run = title.add_run(f'{subject_name} - MCQ Paper')
+    title_run.font.name = font_name
+    title_run.font.size = font_size
+    title_run.font.bold = True
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    doc.add_paragraph()
+    # Instructions
+    inst = doc.add_paragraph()
+    inst_run = inst.add_run('Instructions: Choose the correct option.')
+    inst_run.font.name = font_name
+    inst_run.font.size = font_size
+    inst_run.font.italic = True
+    doc.add_paragraph()
+    for i, q in enumerate(questions, 1):
+        # Question number and text
+        q_text = (q.question_text or '').strip()
+        lines = q_text.split('\n')
+        q_para = doc.add_paragraph()
+        q_para.paragraph_format.space_before = Pt(14)
+        q_para.paragraph_format.space_after = Pt(4)
+        num_run = q_para.add_run(f'Q{i}. ')
+        num_run.font.name = font_name
+        num_run.font.size = font_size
+        num_run.font.bold = True
+        if lines:
+            txt_run = q_para.add_run(lines[0])
+            txt_run.font.name = font_name
+            txt_run.font.size = font_size
+        for line in lines[1:]:
+            p = doc.add_paragraph()
+            r = p.add_run(line)
+            r.font.name = font_name
+            r.font.size = font_size
+            p.paragraph_format.left_indent = Inches(0.3)
+        # Options (original order)
+        options = _build_options_for_paper(q, options_count)
+        for letter, text in options:
+            opt_para = doc.add_paragraph()
+            opt_para.paragraph_format.left_indent = Inches(0.3)
+            opt_para.paragraph_format.space_after = Pt(2)
+            opt_run = opt_para.add_run(f'{letter}) {text}' if text else f'{letter}) ')
+            opt_run.font.name = font_name
+            opt_run.font.size = font_size
+    from io import BytesIO
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    filename = f"MCQ_Paper_{subject_name.replace(' ', '_')}.docx"
+    response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response

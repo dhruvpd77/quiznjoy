@@ -34,5 +34,12 @@ urlpatterns = [
     path('admin/delete-unit-programming-questions/<int:subject_id>/<int:unit>/', views.delete_unit_programming_questions, name='delete_unit_programming_questions'),
     path('admin/delete-all-programming-questions/<int:subject_id>/', views.delete_all_programming_questions, name='delete_all_programming_questions'),
     path('admin/programming-question-analytics/', views.programming_question_analytics, name='programming_question_analytics'),
+    # Paper Generation
+    path('admin/paper-generation/', views.paper_generation, name='paper_generation'),
+    path('admin/paper-generation-units/<int:subject_id>/', views.paper_generation_units, name='paper_generation_units'),
+    path('admin/paper-preview/', views.paper_preview, name='paper_preview'),
+    path('admin/paper-shuffle/', views.paper_shuffle, name='paper_shuffle'),
+    path('admin/paper-shuffle-question/<int:position>/', views.paper_shuffle_question, name='paper_shuffle_question'),
+    path('admin/paper-download/', views.paper_download, name='paper_download'),
 ]
 
