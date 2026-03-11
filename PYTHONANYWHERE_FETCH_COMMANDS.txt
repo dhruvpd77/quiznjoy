@@ -1,0 +1,27 @@
+# Copy and paste these commands ONE BY ONE in PythonAnywhere Bash console
+# Or paste the whole block and press Enter
+
+# Step 1: Backup your data
+mkdir -p ~/quiznjoy_backup
+cp -r ~/quiznjoy/media ~/quiznjoy_backup/ 2>/dev/null || true
+cp ~/quiznjoy/db.sqlite3 ~/quiznjoy_backup/ 2>/dev/null || true
+
+# Step 2: Remove old folder and clone fresh
+mv ~/quiznjoy ~/quiznjoy_old
+git clone https://github.com/dhruvpd77/quiznjoy.git
+cd ~/quiznjoy
+
+# Step 3: Restore your data
+cp -r ~/quiznjoy_backup/media ~/quiznjoy/ 2>/dev/null || true
+cp ~/quiznjoy_backup/db.sqlite3 ~/quiznjoy/ 2>/dev/null || true
+
+# Step 4: Create virtualenv and install
+python3.10 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Step 5: Django setup
+python manage.py migrate
+python manage.py collectstatic --noinput
+
+# Done! Now go to Web tab and click Reload
