@@ -50,7 +50,7 @@ When you click "Understand Solution":
 For production, consider moving the API key to environment variables:
 ```bash
 # Windows PowerShell
-$env:GROQ_API_KEY="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"
+$env:GROQ_API_KEY="your-groq-api-key-here"
 
 # Then remove the key from settings.py
 ```
